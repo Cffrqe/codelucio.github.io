@@ -4,33 +4,39 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <meta name="theme-color" content="#070812" />
-  <meta name="description" content="codelucio.online — Coming soon." />
+  <meta name="description" content="Community Ranking — Coming Soon (codelucio.online)" />
 
-  <title>codelucio.online — Coming Soon</title>
+  <title>Community Ranking — Coming Soon</title>
 
   <!-- Open Graph -->
-  <meta property="og:title" content="codelucio.online — Coming Soon" />
-  <meta property="og:description" content="We’re building something sleek. Launching soon." />
+  <meta property="og:title" content="Community Ranking — Coming Soon" />
+  <meta property="og:description" content="Launching soon. Countdown inside." />
   <meta property="og:type" content="website" />
 
   <!-- Font -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
 
   <style>
     :root{
-      --bg0:#060611;
-      --bg1:#0a0b1a;
-      --card: rgba(16, 18, 35, .62);
-      --stroke: rgba(255,255,255,.10);
+      color-scheme: dark;
+
+      --bg0:#050612;
+      --bg1:#0a0b1b;
+
       --text: rgba(255,255,255,.92);
       --muted: rgba(255,255,255,.68);
-      --accentA:#8a5cff;
-      --accentB:#35d7ff;
-      --accentC:#00ffa8;
-      --shadow: 0 30px 80px rgba(0,0,0,.55);
-      --radius: 24px;
+
+      --card: rgba(14, 16, 32, .62);
+      --stroke: rgba(255,255,255,.10);
+
+      --a:#8a5cff;
+      --b:#35d7ff;
+      --c:#00ffa8;
+
+      --shadow: 0 40px 120px rgba(0,0,0,.60);
+      --r: 26px;
     }
 
     *{ box-sizing:border-box; }
@@ -39,34 +45,35 @@
       margin:0;
       font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
       color: var(--text);
-      background: radial-gradient(1200px 800px at 20% 10%, rgba(138,92,255,.20), transparent 55%),
-                  radial-gradient(1100px 900px at 80% 30%, rgba(53,215,255,.16), transparent 55%),
-                  radial-gradient(900px 600px at 55% 90%, rgba(0,255,168,.10), transparent 60%),
-                  linear-gradient(180deg, var(--bg0), var(--bg1));
+      background:
+        radial-gradient(900px 700px at 18% 18%, rgba(138,92,255,.22), transparent 60%),
+        radial-gradient(850px 650px at 82% 28%, rgba(53,215,255,.18), transparent 62%),
+        radial-gradient(900px 650px at 55% 92%, rgba(0,255,168,.10), transparent 62%),
+        linear-gradient(180deg, var(--bg0), var(--bg1));
       overflow:hidden;
     }
 
-    /* subtle animated glossy lights */
-    .lights{
-      position:fixed; inset:-30%;
+    /* soft moving aurora */
+    .aurora{
+      position:fixed; inset:-25%;
       background:
-        radial-gradient(closest-side at 20% 30%, rgba(138,92,255,.22), transparent 60%),
-        radial-gradient(closest-side at 70% 40%, rgba(53,215,255,.18), transparent 62%),
-        radial-gradient(closest-side at 55% 70%, rgba(0,255,168,.10), transparent 66%);
-      filter: blur(22px);
-      animation: drift 14s ease-in-out infinite alternate;
+        radial-gradient(closest-side at 20% 30%, rgba(138,92,255,.26), transparent 62%),
+        radial-gradient(closest-side at 70% 35%, rgba(53,215,255,.22), transparent 64%),
+        radial-gradient(closest-side at 55% 75%, rgba(0,255,168,.12), transparent 66%);
+      filter: blur(26px);
+      opacity:.9;
+      animation: drift 16s ease-in-out infinite alternate;
       pointer-events:none;
     }
     @keyframes drift{
-      from { transform: translate3d(-2%, -2%, 0) scale(1.02); opacity:.9; }
-      to   { transform: translate3d( 2%,  2%, 0) scale(1.06); opacity:1; }
+      from { transform: translate3d(-2%, -2%, 0) scale(1.02); }
+      to   { transform: translate3d( 2%,  2%, 0) scale(1.06); }
     }
 
-    /* faint noise overlay (no images) */
+    /* subtle noise */
     .noise{
       position:fixed; inset:0;
-      background-image:
-        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='.25'/%3E%3C/svg%3E");
+      background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='.25'/%3E%3C/svg%3E");
       opacity:.06;
       mix-blend-mode: overlay;
       pointer-events:none;
@@ -81,368 +88,219 @@
       z-index:1;
     }
 
+    /* modern “glass + gradient border” card */
     .card{
-      width:min(960px, 100%);
-      background: var(--card);
-      border: 1px solid var(--stroke);
-      border-radius: var(--radius);
+      width:min(780px, 100%);
+      border-radius: var(--r);
+      background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
       box-shadow: var(--shadow);
-      backdrop-filter: blur(18px);
-      -webkit-backdrop-filter: blur(18px);
       position:relative;
       overflow:hidden;
+      isolation:isolate;
     }
-
-    /* glossy highlight sweep */
     .card::before{
       content:"";
-      position:absolute;
-      inset:-40% -10%;
-      background: linear-gradient(120deg,
-        transparent 35%,
-        rgba(255,255,255,.10) 45%,
-        rgba(255,255,255,.04) 55%,
-        transparent 70%);
-      transform: translateX(-35%) rotate(8deg);
-      animation: sheen 4.8s ease-in-out infinite;
+      position:absolute; inset:0;
+      padding: 1px; /* border thickness */
+      border-radius: inherit;
+      background: linear-gradient(120deg, rgba(138,92,255,.65), rgba(53,215,255,.55), rgba(0,255,168,.35));
+      -webkit-mask:
+        linear-gradient(#000 0 0) content-box,
+        linear-gradient(#000 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      opacity:.55;
       pointer-events:none;
+      z-index:0;
+    }
+    .card::after{
+      content:"";
+      position:absolute; inset:-40%;
+      background: linear-gradient(120deg,
+        transparent 40%,
+        rgba(255,255,255,.10) 50%,
+        transparent 60%);
+      transform: translateX(-35%) rotate(10deg);
+      animation: sheen 5.2s ease-in-out infinite;
+      opacity:.65;
+      pointer-events:none;
+      z-index:0;
     }
     @keyframes sheen{
-      0%, 100% { transform: translateX(-38%) rotate(8deg); opacity:.55; }
-      50%      { transform: translateX( 38%) rotate(8deg); opacity:.85; }
+      0%,100% { transform: translateX(-38%) rotate(10deg); }
+      50%     { transform: translateX( 38%) rotate(10deg); }
     }
 
-    .inner{
-      display:grid;
-      grid-template-columns: 1.1fr .9fr;
-      gap: 22px;
+    .content{
+      position:relative;
+      z-index:1;
       padding: 34px;
+      border-radius: inherit;
+      background: rgba(10, 12, 26, .55);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border: 1px solid rgba(255,255,255,.10);
     }
 
-    header{
+    .top{
       display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap: 14px;
-      padding: 18px 22px 0;
+      justify-content:center;
+      margin-bottom: 14px;
     }
 
-    .brand{
-      display:flex;
-      align-items:center;
-      gap: 10px;
-      user-select:none;
-    }
-    .logo{
-      width: 34px; height:34px;
-      border-radius: 12px;
-      background:
-        radial-gradient(circle at 30% 30%, rgba(255,255,255,.20), transparent 55%),
-        linear-gradient(135deg, rgba(138,92,255,.95), rgba(53,215,255,.85));
-      box-shadow: 0 12px 30px rgba(138,92,255,.28);
-      border: 1px solid rgba(255,255,255,.18);
-    }
-    .brand b{ letter-spacing:.2px; }
     .pill{
       font-size: 12px;
+      letter-spacing: .12em;
+      text-transform: uppercase;
       color: rgba(255,255,255,.82);
       border: 1px solid rgba(255,255,255,.14);
-      background: rgba(0,0,0,.18);
-      padding: 8px 10px;
+      background: rgba(0,0,0,.22);
+      padding: 10px 12px;
       border-radius: 999px;
     }
 
     h1{
-      margin: 6px 0 10px;
-      font-size: clamp(30px, 4.2vw, 44px);
+      margin: 0;
+      font-size: clamp(28px, 4.5vw, 44px);
       line-height: 1.08;
-      letter-spacing: -0.02em;
-    }
-    p{
-      margin:0;
-      color: var(--muted);
-      line-height:1.55;
-      font-size: 15px;
+      letter-spacing: -0.03em;
+      text-align:center;
+      text-wrap: balance;
     }
 
-    .gradient-text{
-      background: linear-gradient(90deg, var(--accentA), var(--accentB), var(--accentC));
+    .grad{
+      background: linear-gradient(90deg, var(--a), var(--b), var(--c));
       -webkit-background-clip: text;
-      background-clip:text;
+      background-clip: text;
       color: transparent;
     }
 
-    .left{
-      padding: 6px 4px;
-    }
-
-    .cta{
-      margin-top: 18px;
-      display:flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      align-items:center;
-    }
-
-    .field{
-      flex: 1 1 260px;
-      display:flex;
-      align-items:center;
-      gap:10px;
-      padding: 12px 12px;
-      border-radius: 14px;
-      border: 1px solid rgba(255,255,255,.14);
-      background: rgba(0,0,0,.18);
-    }
-    .field input{
-      width:100%;
-      border:0;
-      outline:none;
-      background:transparent;
-      color: var(--text);
+    .sub{
+      margin: 12px auto 0;
+      max-width: 52ch;
+      text-align:center;
+      color: var(--muted);
       font-size: 14px;
-    }
-    .field input::placeholder{ color: rgba(255,255,255,.46); }
-
-    .btn{
-      appearance:none;
-      border:0;
-      cursor:pointer;
-      padding: 12px 14px;
-      border-radius: 14px;
-      font-weight: 600;
-      color: rgba(10,12,20,.92);
-      background: linear-gradient(135deg, rgba(138,92,255,1), rgba(53,215,255,1));
-      box-shadow: 0 14px 36px rgba(53,215,255,.18);
-      transition: transform .15s ease, filter .15s ease;
-    }
-    .btn:hover{ transform: translateY(-1px); filter:saturate(1.05); }
-    .btn:active{ transform: translateY(0px) scale(.99); }
-
-    .mini{
-      font-size: 12px;
-      color: rgba(255,255,255,.58);
-      margin-top: 10px;
-    }
-
-    .right{
-      border-radius: 18px;
-      border: 1px solid rgba(255,255,255,.12);
-      background:
-        radial-gradient(120% 100% at 20% 10%, rgba(255,255,255,.06), transparent 60%),
-        radial-gradient(110% 110% at 70% 30%, rgba(53,215,255,.10), transparent 60%),
-        rgba(0,0,0,.18);
-      padding: 18px;
-      position:relative;
-      overflow:hidden;
-    }
-    .right::after{
-      content:"";
-      position:absolute; inset: -2px;
-      border-radius: 18px;
-      pointer-events:none;
-      background: linear-gradient(180deg, rgba(255,255,255,.10), transparent 30%, transparent 70%, rgba(255,255,255,.06));
-      opacity:.7;
+      line-height: 1.6;
     }
 
     .countdown{
+      margin-top: 22px;
       display:grid;
       grid-template-columns: repeat(4, minmax(0, 1fr));
       gap: 10px;
-      margin-top: 4px;
-      position:relative;
-      z-index:1;
     }
+
     .unit{
       padding: 14px 12px;
-      border-radius: 16px;
+      border-radius: 18px;
       border: 1px solid rgba(255,255,255,.12);
       background: rgba(0,0,0,.20);
       text-align:center;
     }
+
     .num{
-      font-size: 26px;
-      font-weight: 700;
-      letter-spacing:-0.02em;
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
     }
+
     .lbl{
       margin-top: 6px;
       font-size: 11px;
       color: rgba(255,255,255,.62);
       text-transform: uppercase;
-      letter-spacing: .12em;
+      letter-spacing: .14em;
     }
 
     .meta{
-      margin-top: 14px;
+      margin-top: 16px;
       display:flex;
-      align-items:center;
-      justify-content:space-between;
+      justify-content:center;
       gap: 10px;
-      position:relative;
-      z-index:1;
-    }
-    .status{
-      font-size: 12px;
-      color: rgba(255,255,255,.72);
-      display:flex;
       align-items:center;
-      gap: 8px;
-    }
-    .dot{
-      width:8px;height:8px;border-radius:999px;
-      background: rgba(53,215,255,.95);
-      box-shadow: 0 0 0 6px rgba(53,215,255,.10);
+      color: rgba(255,255,255,.62);
+      font-size: 12px;
     }
 
-    .links{
-      display:flex;
-      gap: 10px;
+    .dot{
+      width:8px; height:8px;
+      border-radius: 999px;
+      background: rgba(53,215,255,.95);
+      box-shadow: 0 0 0 7px rgba(53,215,255,.10);
     }
-    .icon{
-      width: 38px; height: 38px;
-      border-radius: 14px;
-      border: 1px solid rgba(255,255,255,.12);
-      background: rgba(0,0,0,.18);
-      display:grid;
-      place-items:center;
-      color: rgba(255,255,255,.82);
-      text-decoration:none;
-      transition: transform .15s ease, border-color .15s ease;
-    }
-    .icon:hover{ transform: translateY(-1px); border-color: rgba(255,255,255,.22); }
-    .icon svg{ width:18px;height:18px; opacity:.9; }
 
     footer{
-      padding: 0 22px 18px;
-      color: rgba(255,255,255,.44);
+      margin-top: 18px;
+      text-align:center;
       font-size: 12px;
-      display:flex;
-      justify-content:space-between;
-      gap: 10px;
-      flex-wrap:wrap;
+      color: rgba(255,255,255,.46);
     }
 
-    @media (max-width: 860px){
-      .inner{ grid-template-columns: 1fr; }
-      header{ padding-bottom: 6px; }
-      .right{ order: 2; }
+    @media (max-width: 520px){
+      .content{ padding: 26px; }
+      .countdown{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
     }
 
     @media (prefers-reduced-motion: reduce){
-      .lights, .card::before { animation: none !important; }
+      .aurora, .card::after { animation: none !important; }
     }
   </style>
 </head>
 
 <body>
-  <div class="lights"></div>
-  <div class="noise"></div>
+  <div class="aurora" aria-hidden="true"></div>
+  <div class="noise" aria-hidden="true"></div>
 
   <main class="wrap">
-    <section class="card" aria-label="Coming soon">
-      <header>
-        <div class="brand">
-          <div class="logo" aria-hidden="true"></div>
-          <div>
-            <b>codelucio.online</b><br/>
-            <span style="font-size:12px;color:rgba(255,255,255,.55)">Dark. Glossy. Modern.</span>
-          </div>
+    <section class="card" aria-label="Coming soon countdown">
+      <div class="content">
+        <div class="top">
+          <div class="pill" id="pill">Coming soon</div>
         </div>
-        <div class="pill" id="launchLabel">Launching soon</div>
-      </header>
 
-      <div class="inner">
-        <div class="left">
-          <h1>
-            Something <span class="gradient-text">sleek</span> is on the way.
-          </h1>
-          <p>
-            AcuteBunny Here! i am making the website for <b>codelucio.online</b>.
-            Put your email in or join the discord to get notified when i finish the website!
-          </p>
+        <h1>
+          <span class="grad">Community Ranking</span> — Coming Soon
+        </h1>
 
-          <form class="cta" id="notifyForm" autocomplete="on">
-            <div class="field">
-              <!-- mail icon -->
-              <svg aria-hidden="true" viewBox="0 0 24 24" fill="none">
-                <path d="M4 7.5A3.5 3.5 0 0 1 7.5 4h9A3.5 3.5 0 0 1 20 7.5v9A3.5 3.5 0 0 1 16.5 20h-9A3.5 3.5 0 0 1 4 16.5v-9Z" stroke="rgba(255,255,255,.55)" stroke-width="1.5"/>
-                <path d="M7 8l5 4 5-4" stroke="rgba(255,255,255,.55)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-              <input id="email" name="email" type="email" placeholder="you@domain.com" required />
-            </div>
-            <button class="btn" type="submit">Notify me</button>
-          </form>
+        <p class="sub" id="statusText">
+          We’re building something sleek. Countdown to launch:
+        </p>
 
-          <div class="mini" id="formHint">
-            No spam, just one email when i launch the website.
+        <div class="countdown" role="timer" aria-live="polite">
+          <div class="unit">
+            <div class="num" id="d">—</div>
+            <div class="lbl">Days</div>
+          </div>
+          <div class="unit">
+            <div class="num" id="h">—</div>
+            <div class="lbl">Hours</div>
+          </div>
+          <div class="unit">
+            <div class="num" id="m">—</div>
+            <div class="lbl">Minutes</div>
+          </div>
+          <div class="unit">
+            <div class="num" id="s">—</div>
+            <div class="lbl">Seconds</div>
           </div>
         </div>
 
-        <aside class="right" aria-label="Countdown">
-          <p style="margin:0 0 10px;color:rgba(255,255,255,.72);font-weight:600">
-            Countdown to launch
-          </p>
+        <div class="meta">
+          <span class="dot" aria-hidden="true"></span>
+          <span id="metaLine">In development</span>
+        </div>
 
-          <div class="countdown" role="timer" aria-live="polite">
-            <div class="unit">
-              <div class="num" id="d">—</div>
-              <div class="lbl">Days</div>
-            </div>
-            <div class="unit">
-              <div class="num" id="h">—</div>
-              <div class="lbl">Hours</div>
-            </div>
-            <div class="unit">
-              <div class="num" id="m">—</div>
-              <div class="lbl">Minutes</div>
-            </div>
-            <div class="unit">
-              <div class="num" id="s">—</div>
-              <div class="lbl">Seconds</div>
-            </div>
-          </div>
-
-          <div class="meta">
-            <div class="status">
-              <span class="dot" aria-hidden="true"></span>
-              <span id="statusText">In development</span>
-            </div>
-
-            <div class="links" aria-label="Links">
-              <!-- Replace # with your real links -->
-              <a class="icon" href="#" aria-label="X / Twitter">
-                <svg viewBox="0 0 24 24" fill="none">
-                  <path d="M7 17L17 7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
-                  <path d="M7 7h6.2M17 17h-6.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
-                </svg>
-              </a>
-              <a class="icon" href="#" aria-label="GitHub">
-                <svg viewBox="0 0 24 24" fill="none">
-                  <path d="M12 2.8a9.4 9.4 0 0 0-3 18.3c.5.1.7-.2.7-.5v-1.9c-2.9.6-3.5-1.2-3.5-1.2-.5-1.2-1.2-1.5-1.2-1.5-1-.7.1-.7.1-.7 1.1.1 1.7 1.1 1.7 1.1 1 .1 1.6-.7 1.9-1 .1-.7.4-1.1.7-1.4-2.3-.3-4.7-1.2-4.7-5.3 0-1.2.4-2.2 1.1-3-.1-.3-.5-1.4.1-2.9 0 0 .9-.3 3 .1a10.3 10.3 0 0 1 5.5 0c2.1-.4 3-.1 3-.1.6 1.5.2 2.6.1 2.9.7.8 1.1 1.8 1.1 3 0 4.1-2.4 5-4.7 5.3.4.3.7 1 .7 2v3c0 .3.2.6.7.5A9.4 9.4 0 0 0 12 2.8Z"
-                        stroke="currentColor" stroke-width="1.2" />
-                </svg>
-              </a>
-              <a class="icon" href="mailto:hello@codelucio.online" aria-label="Email">
-                <svg viewBox="0 0 24 24" fill="none">
-                  <path d="M4.5 7.5A3 3 0 0 1 7.5 4.5h9A3 3 0 0 1 19.5 7.5v9a3 3 0 0 1-3 3h-9a3 3 0 0 1-3-3v-9Z" stroke="currentColor" stroke-width="1.4"/>
-                  <path d="M6.8 8.2 12 12l5.2-3.8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-              </a>
-            </div>
-          </div>
-        </aside>
+        <footer>
+          © <span id="year"></span> codelucio.online
+        </footer>
       </div>
-
-      <footer>
-        <span>© <span id="year"></span> codelucio.online</span>
-        <span>Built with love by @acutebunny</span>
-      </footer>
     </section>
   </main>
 
   <script>
-    // 1) Set your launch date/time here (local time). Example: Feb 15, 2026 10:00:00
+    // Set your launch date/time here (local time).
+    // Example: const LAUNCH_AT = new Date("2026-02-01T10:00:00");
     const LAUNCH_AT = new Date("2026-02-01T10:00:00");
 
     const $ = (id) => document.getElementById(id);
@@ -450,17 +308,21 @@
 
     function tick(){
       const now = new Date();
-      let diff = LAUNCH_AT - now;
+      const target = LAUNCH_AT;
 
-      if (isNaN(LAUNCH_AT.getTime())) {
-        $("statusText").textContent = "Set a launch date in the code";
+      if (isNaN(target.getTime())) {
+        $("statusText").textContent = "Set a valid launch date in the code.";
+        $("metaLine").textContent = "Waiting for a date";
         ["d","h","m","s"].forEach(k => $(k).textContent = "—");
         return;
       }
 
+      let diff = target - now;
+
       if (diff <= 0){
-        $("launchLabel").textContent = "We’re live";
-        $("statusText").textContent = "Launching now";
+        $("pill").textContent = "We’re live";
+        $("statusText").textContent = "Launching now.";
+        $("metaLine").textContent = "Live";
         ["d","h","m","s"].forEach(k => $(k).textContent = "00");
         return;
       }
@@ -468,35 +330,21 @@
       const sec = Math.floor(diff / 1000);
       const days = Math.floor(sec / 86400);
       const hours = Math.floor((sec % 86400) / 3600);
-      const mins = Math.floor((sec % 3600) / 60);
-      const secs = sec % 60;
+      const mins  = Math.floor((sec % 3600) / 60);
+      const secs  = sec % 60;
 
       $("d").textContent = String(days);
       $("h").textContent = pad(hours);
       $("m").textContent = pad(mins);
       $("s").textContent = pad(secs);
 
-      $("launchLabel").textContent = "Launching soon";
-      $("statusText").textContent = "In development";
+      $("pill").textContent = "Coming soon";
+      $("metaLine").textContent = "In development";
     }
 
-    // Simple “Notify me” handler (replace with your backend / newsletter)
-    document.getElementById("notifyForm").addEventListener("submit", (e) => {
-      e.preventDefault();
-      const email = document.getElementById("email").value.trim();
-
-      // demo only
-      document.getElementById("formHint").textContent =
-        `Thanks! We’ll notify ${email} when we launch. (Hook this form to your newsletter backend.)`;
-
-      e.target.reset();
-    });
-
-    document.getElementById("year").textContent = new Date().getFullYear();
-
+    $("year").textContent = new Date().getFullYear();
     tick();
     setInterval(tick, 1000);
   </script>
 </body>
 </html>
-
