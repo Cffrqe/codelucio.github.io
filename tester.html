@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Community Ranking — Tester Dashboard</title>
+  <link rel="stylesheet" href="./js/ui.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Tester Dashboard (Tier 2+)</h1>
+      <div class="nav">
+        <a href="./app.html">My Profile</a>
+        <a href="./leaderboard.html">Leaderboard</a>
+        <a href="./evaluator.html">Evaluator</a>
+      </div>
+    </div>
+
+    <section class="card">
+      <div class="content">
+        <div id="top" class="panel"></div>
+        <div id="err" class="err" style="margin-top:12px"></div>
+
+        <div class="hr"></div>
+
+        <div class="grid">
+          <div class="panel">
+            <h2>Pending tests</h2>
+            <div id="pending"><small>Loading…</small></div>
+          </div>
+
+          <div class="panel">
+            <h2>Accepted by me</h2>
+            <div id="mine"><small>Loading…</small></div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script type="module">
+    import { supabase } from "./js/supabaseClient.js";
+    import { REDIRECT_TO } from "./js/config.js";
+
+    const $ = (id) => document.getElementById(id);
+
+    function candidateName(r){
+      return r.candidate_username || r.candidate_discord_name || r.candidate_id.slice(0,8);
+    }
+
+    async function requireTester(){
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session){
+        $("top").innerHTML = `
+          <div class="row">
+            <div><b>Not signed in</b><br><small>Sign in to use tester tools.</small></div>
+            <button class="btn primary" id="login">Sign in with Discord</button>
+          </div>
+        `;
+        document.getElementById("login").onclick = () =>
+          supabase.auth.signInWithOAuth({ provider:"discord", options:{ redirectTo: REDIRECT_TO }});
+        throw new Error("Not signed in");
+      }
+
+      const { data: p, error } = await supabase
+        .from("profiles")
+        .select("tier, username, discord_name, avatar_url")
+        .eq("id", session.user.id)
+        .single();
+
+      if (error) throw error;
+      if (p.tier > 2) throw new Error("Access denied: you must be Tier 2 or Tier 1 to test.");
+
+      $("top").innerHTML = `
+        <div class="row">
+          <div class="userline">
+            ${p.avatar_url ? `<img class="avatar" alt="" src="${p.avatar_url}">` : `<div class="avatar"></div>`}
+            <div>
+              <div><b>${p.username || p.discord_name || "Tester"}</b> <small>(Tier ${p.tier})</small></div>
+              <div class="mono">${session.user.id}</div>
+            </div>
+          </div>
+          <button class="btn" id="logout">Sign out</button>
+        </div>
+      `;
+      document.getElementById("logout").onclick = async () => { await supabase.auth.signOut(); location.reload(); };
+      return session;
+    }
+
+    async function loadLists(session){
+      $("err").textContent = "";
+
+      const pending = await supabase
+        .from("test_requests_view")
+        .select("*")
+        .eq("status", "pending")
+        .order("created_at", { ascending: true });
+
+      const mine = await supabase
+        .from("test_requests_view")
+        .select("*")
+        .eq("status", "accepted")
+        .eq("tester_id", session.user.id)
+        .order("created_at", { ascending: true });
+
+      if (pending.error) $("err").textContent = pending.error.message;
+      if (mine.error) $("err").textContent = mine.error.message;
+
+      $("pending").innerHTML = (pending.data || []).map(r => {
+        const hasProof = !!r.proof_url;
+        return `
+          <div class="panel" style="margin:10px 0; padding:14px">
+            <div class="row">
+              <div>
+                <span class="badge badge-${r.status}">${r.status}</span>
+                <small> ${candidateName(r)} • Tier ${r.from_tier} → ${r.to_tier}</small><br/>
+                <small>${new Date(r.created_at).toLocaleString()}</small>
+              </div>
+              <button class="btn primary" data-accept="${r.id}" ${hasProof ? "" : "disabled"} title="${hasProof ? "" : "Cannot accept without proof URL"}">
+                Accept
+              </button>
+            </div>
+
+            <div style="margin-top:10px">
+              <small>Proof: ${r.proof_url ? `<a href="${r.proof_url}" target="_blank" rel="noreferrer">open</a>` : "— (waiting)"} </small><br/>
+              <small>Notes: ${r.notes || "—"}</small>
+            </div>
+          </div>
+        `;
+      }).join("") || `<small>No pending tests.</small>`;
+
+      $("mine").innerHTML = (mine.data || []).map(r => `
+        <div class="panel" style="margin:10px 0; padding:14px">
+          <div>
+            <span class="badge badge-${r.status}">${r.status}</span>
+            <small> ${candidateName(r)} • Tier ${r.from_tier} → ${r.to_tier}</small>
+          </div>
+
+          <div style="margin-top:10px">
+            <small>Proof: ${r.proof_url ? `<a href="${r.proof_url}" target="_blank" rel="noreferrer">open</a>` : "—"}</small><br/>
+            <small>Notes: ${r.notes || "—"}</small>
+          </div>
+
+          <div class="row" style="margin-top:12px">
+            <button class="btn primary" data-pass="${r.id}">Pass</button>
+            <button class="btn" data-fail="${r.id}">Fail</button>
+          </div>
+        </div>
+      `).join("") || `<small>No accepted tests.</small>`;
+
+      document.querySelectorAll("[data-accept]").forEach(btn => {
+        btn.onclick = async () => {
+          const id = btn.getAttribute("data-accept");
+          const { error } = await supabase.from("test_requests").update({
+            status: "accepted",
+            tester_id: session.user.id
+          }).eq("id", id);
+          if (error) $("err").textContent = error.message;
+          await loadLists(session);
+        };
+      });
+
+      document.querySelectorAll("[data-pass]").forEach(btn => {
+        btn.onclick = async () => {
+          const id = btn.getAttribute("data-pass");
+          const { error } = await supabase.from("test_requests").update({
+            status: "passed"
+          }).eq("id", id);
+          if (error) $("err").textContent = error.message;
+          await loadLists(session);
+        };
+      });
+
+      document.querySelectorAll("[data-fail]").forEach(btn => {
+        btn.onclick = async () => {
+          const id = btn.getAttribute("data-fail");
+          const { error } = await supabase.from("test_requests").update({
+            status: "failed"
+          }).eq("id", id);
+          if (error) $("err").textContent = error.message;
+          await loadLists(session);
+        };
+      });
+    }
+
+    try{
+      const session = await requireTester();
+      await loadLists(session);
+    }catch(e){
+      $("err").textContent = e.message;
+      $("pending").innerHTML = "";
+      $("mine").innerHTML = "";
+    }
+  </script>
+</body>
+</html>
