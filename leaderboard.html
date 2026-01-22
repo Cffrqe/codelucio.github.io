@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Community Ranking — Leaderboard</title>
+  <link rel="stylesheet" href="./js/ui.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Leaderboard</h1>
+      <div class="nav">
+        <a href="./app.html">My Profile</a>
+        <a href="./tester.html">Tester</a>
+        <a href="./evaluator.html">Evaluator</a>
+      </div>
+    </div>
+
+    <section class="card">
+      <div class="content">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Player</th>
+              <th>Tier</th>
+              <th>Rating</th>
+              <th>W/L</th>
+              <th>Updated</th>
+            </tr>
+          </thead>
+          <tbody id="body"></tbody>
+        </table>
+
+        <div id="msg" class="err" style="margin-top:12px"></div>
+      </div>
+    </section>
+  </div>
+
+  <script type="module">
+    import { supabase } from "./js/supabaseClient.js";
+
+    const body = document.getElementById("body");
+    const msg = document.getElementById("msg");
+
+    function displayName(r){
+      return r.username || r.discord_name || r.user_id?.slice(0,8);
+    }
+    function avatar(r){
+      return r.avatar_url || "";
+    }
+
+    const { data, error } = await supabase
+      .from("leaderboard_view")
+      .select("*")
+      .order("rating", { ascending: false })
+      .order("updated_at", { ascending: false });
+
+    if (error) msg.textContent = error.message;
+
+    if (!data || data.length === 0){
+      body.innerHTML = `<tr><td colspan="6"><small>No ranked players yet.</small></td></tr>`;
+    } else {
+      body.innerHTML = data.map((r, i) => `
+        <tr>
+          <td>${i + 1}</td>
+          <td>
+            <div class="userline">
+              <img class="avatar" alt="" src="${avatar(r)}" onerror="this.style.display='none'">
+              <div>
+                <div>${displayName(r)}</div>
+                <div class="mono">${r.user_id}</div>
+              </div>
+            </div>
+          </td>
+          <td><span class="badge">Tier ${r.tier}</span></td>
+          <td>${r.rating}</td>
+          <td>${r.wins}/${r.losses}</td>
+          <td><small>${new Date(r.updated_at).toLocaleString()}</small></td>
+        </tr>
+      `).join("");
+    }
+  </script>
+</body>
+</html>
