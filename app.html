@@ -1,0 +1,374 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Community Ranking — My Profile</title>
+  <link rel="stylesheet" href="./js/ui.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>My Profile</h1>
+      <div class="nav">
+        <a href="./leaderboard.html">Leaderboard</a>
+        <a href="./tester.html">Tester</a>
+        <a href="./evaluator.html">Evaluator</a>
+      </div>
+    </div>
+
+    <section class="card">
+      <div class="content">
+        <div class="row">
+          <div class="userline">
+            <img class="avatar" id="meAvatar" alt="" style="display:none">
+            <div>
+              <div><b id="who">Not signed in</b></div>
+              <div class="mono" id="uid"></div>
+            </div>
+          </div>
+
+          <div class="row">
+            <button class="btn primary" id="login">Sign in with Discord</button>
+            <button class="btn" id="logout" style="display:none">Sign out</button>
+            <button class="btn" id="refresh" style="display:none">Refresh</button>
+          </div>
+        </div>
+
+        <div id="profileArea" style="display:none; margin-top:14px">
+          <div class="grid">
+            <div class="panel">
+              <h2>Status</h2>
+              <div class="stack">
+                <div>Tier: <span class="badge" id="tierBadge">—</span></div>
+                <div>Ranked: <span class="badge" id="rankBadge">—</span></div>
+                <small>Game: Gorilla Tag • Proof required (video link) for promotions/evals.</small>
+              </div>
+            </div>
+
+            <div class="panel">
+              <h2>Set username</h2>
+              <div class="stack">
+                <input class="input" id="username" placeholder="e.g. AcuteBunny" />
+                <button class="btn" id="saveUsername">Save</button>
+                <div id="uMsg"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid" style="margin-top:12px">
+            <div class="panel">
+              <h2>Request Tier Test</h2>
+              <small>Request the next tier up (Tier 5→4→3→2→1). Tier 2+ can test you.</small>
+
+              <div class="stack" style="margin-top:10px">
+                <input class="input" id="testProof" placeholder="Proof video URL (required) e.g. https://..." />
+                <input class="input" id="testNotes" placeholder="Notes (optional)" />
+                <button class="btn primary" id="reqTest">Request Test</button>
+                <div id="testMsg"></div>
+              </div>
+
+              <div class="hr"></div>
+              <h2>My test requests</h2>
+              <div id="myTests"><small>—</small></div>
+            </div>
+
+            <div class="panel">
+              <h2>Request Eval (enter leaderboard)</h2>
+              <small>Once you reach <b>Tier 2</b>, request an eval. Tier 3+ evaluates you.</small>
+
+              <div class="stack" style="margin-top:10px">
+                <input class="input" id="evalProof" placeholder="Proof video URL (required) e.g. https://..." />
+                <input class="input" id="evalNotes" placeholder="Notes (optional)" />
+                <button class="btn primary" id="reqEval">Request Eval</button>
+                <div id="evalMsg"></div>
+              </div>
+
+              <div class="hr"></div>
+              <h2>My eval requests</h2>
+              <div id="myEvals"><small>—</small></div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script type="module">
+    import { supabase } from "./js/supabaseClient.js";
+    import { REDIRECT_TO } from "./js/config.js";
+
+    const $ = (id) => document.getElementById(id);
+
+    function setMsg(el, kind, text){
+      el.innerHTML = text ? `<span class="${kind}">${text}</span>` : "";
+    }
+
+    function isValidUrl(u){
+      return /^https?:\/\/.+/i.test(u.trim());
+    }
+
+    $("login").onclick = async () => {
+      await supabase.auth.signInWithOAuth({
+        provider: "discord",
+        options: { redirectTo: REDIRECT_TO }
+      });
+    };
+
+    $("logout").onclick = async () => {
+      await supabase.auth.signOut();
+      location.reload();
+    };
+
+    $("refresh").onclick = async () => {
+      await main();
+    };
+
+    async function loadMyProfile(userId){
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("id, username, discord_name, avatar_url, tier, is_ranked")
+        .eq("id", userId)
+        .single();
+      if (error) throw error;
+      return data;
+    }
+
+    async function refreshMyRequests(userId){
+      // Tests
+      const myTests = await supabase
+        .from("test_requests_view")
+        .select("id,status,from_tier,to_tier,created_at,resolved_at,proof_url,notes,tester_discord_name,tester_username")
+        .eq("candidate_id", userId)
+        .order("created_at", { ascending: false })
+        .limit(10);
+
+      // Evals
+      const myEvals = await supabase
+        .from("eval_requests_view")
+        .select("id,status,created_at,resolved_at,proof_url,notes,evaluator_discord_name,evaluator_username")
+        .eq("candidate_id", userId)
+        .order("created_at", { ascending: false })
+        .limit(10);
+
+      // render tests with optional edit while pending
+      $("myTests").innerHTML = (myTests.data || []).map(r => {
+        const canEdit = r.status === "pending";
+        return `
+          <div class="panel" style="margin:10px 0; padding:14px">
+            <div class="row">
+              <div>
+                <span class="badge badge-${r.status}">${r.status}</span>
+                <small> Tier ${r.from_tier} → ${r.to_tier} • ${new Date(r.created_at).toLocaleString()}</small>
+              </div>
+            </div>
+
+            <div style="margin-top:8px">
+              <small>Proof: ${r.proof_url ? `<a href="${r.proof_url}" target="_blank" rel="noreferrer">open</a>` : "—"}</small><br/>
+              <small>Notes: ${r.notes || "—"}</small>
+            </div>
+
+            ${canEdit ? `
+              <div class="hr"></div>
+              <small>Update proof/notes (only while pending)</small>
+              <div class="stack" style="margin-top:8px">
+                <input class="input" id="tp-${r.id}" value="${r.proof_url || ""}" placeholder="Proof video URL (required) https://..." />
+                <input class="input" id="tn-${r.id}" value="${r.notes || ""}" placeholder="Notes (optional)" />
+                <button class="btn" data-save-test="${r.id}">Save update</button>
+                <div id="tm-${r.id}"></div>
+              </div>
+            ` : ``}
+          </div>
+        `;
+      }).join("") || `<small>No test requests yet.</small>`;
+
+      // render evals with optional edit while pending
+      $("myEvals").innerHTML = (myEvals.data || []).map(r => {
+        const canEdit = r.status === "pending";
+        return `
+          <div class="panel" style="margin:10px 0; padding:14px">
+            <div class="row">
+              <div>
+                <span class="badge badge-${r.status}">${r.status}</span>
+                <small> ${new Date(r.created_at).toLocaleString()}</small>
+              </div>
+            </div>
+
+            <div style="margin-top:8px">
+              <small>Proof: ${r.proof_url ? `<a href="${r.proof_url}" target="_blank" rel="noreferrer">open</a>` : "—"}</small><br/>
+              <small>Notes: ${r.notes || "—"}</small>
+            </div>
+
+            ${canEdit ? `
+              <div class="hr"></div>
+              <small>Update proof/notes (only while pending)</small>
+              <div class="stack" style="margin-top:8px">
+                <input class="input" id="ep-${r.id}" value="${r.proof_url || ""}" placeholder="Proof video URL (required) https://..." />
+                <input class="input" id="en-${r.id}" value="${r.notes || ""}" placeholder="Notes (optional)" />
+                <button class="btn" data-save-eval="${r.id}">Save update</button>
+                <div id="em-${r.id}"></div>
+              </div>
+            ` : ``}
+          </div>
+        `;
+      }).join("") || `<small>No eval requests yet.</small>`;
+
+      // wire test update buttons
+      document.querySelectorAll("[data-save-test]").forEach(btn => {
+        btn.onclick = async () => {
+          const id = btn.getAttribute("data-save-test");
+          const proof = (document.getElementById(`tp-${id}`)?.value || "").trim();
+          const notes = (document.getElementById(`tn-${id}`)?.value || "").trim();
+          const out = document.getElementById(`tm-${id}`);
+
+          out.innerHTML = "";
+          if (!isValidUrl(proof)) return setMsg(out, "err", "Proof URL is required and must start with http(s)://");
+
+          const { error } = await supabase
+            .from("test_requests")
+            .update({ proof_url: proof, notes: notes || null })
+            .eq("id", id);
+
+          if (error) setMsg(out, "err", error.message);
+          else setMsg(out, "ok", "Updated.");
+        };
+      });
+
+      // wire eval update buttons
+      document.querySelectorAll("[data-save-eval]").forEach(btn => {
+        btn.onclick = async () => {
+          const id = btn.getAttribute("data-save-eval");
+          const proof = (document.getElementById(`ep-${id}`)?.value || "").trim();
+          const notes = (document.getElementById(`en-${id}`)?.value || "").trim();
+          const out = document.getElementById(`em-${id}`);
+
+          out.innerHTML = "";
+          if (!isValidUrl(proof)) return setMsg(out, "err", "Proof URL is required and must start with http(s)://");
+
+          const { error } = await supabase
+            .from("eval_requests")
+            .update({ proof_url: proof, notes: notes || null })
+            .eq("id", id);
+
+          if (error) setMsg(out, "err", error.message);
+          else setMsg(out, "ok", "Updated.");
+        };
+      });
+    }
+
+    async function main(){
+      setMsg($("uMsg"), "", "");
+      setMsg($("testMsg"), "", "");
+      setMsg($("evalMsg"), "", "");
+
+      const { data: { session } } = await supabase.auth.getSession();
+
+      if (!session){
+        $("who").textContent = "Not signed in";
+        $("uid").textContent = "";
+        $("meAvatar").style.display = "none";
+
+        $("login").style.display = "";
+        $("logout").style.display = "none";
+        $("refresh").style.display = "none";
+        $("profileArea").style.display = "none";
+        return;
+      }
+
+      $("login").style.display = "none";
+      $("logout").style.display = "";
+      $("refresh").style.display = "";
+      $("uid").textContent = `User ID: ${session.user.id}`;
+
+      const profile = await loadMyProfile(session.user.id);
+
+      $("who").textContent = profile.username || profile.discord_name || "Signed in";
+
+      if (profile.avatar_url){
+        $("meAvatar").src = profile.avatar_url;
+        $("meAvatar").style.display = "";
+      } else {
+        $("meAvatar").style.display = "none";
+      }
+
+      $("username").value = profile.username || "";
+
+      $("tierBadge").textContent = `Tier ${profile.tier}`;
+      $("rankBadge").textContent = profile.is_ranked ? "Yes" : "No";
+
+      // If not tier2 yet, eval request will fail (backend too), so we disable to reduce confusion
+      const canEval = profile.tier <= 2 && !profile.is_ranked;
+      $("reqEval").disabled = !canEval;
+      $("reqEval").title = canEval ? "" : "Reach Tier 2 first (and not already ranked).";
+
+      $("profileArea").style.display = "";
+
+      $("saveUsername").onclick = async () => {
+        setMsg($("uMsg"), "", "");
+        try{
+          const newName = $("username").value.trim();
+          const { error } = await supabase.rpc("set_username", { new_username: newName });
+          if (error) throw error;
+          setMsg($("uMsg"), "ok", "Saved.");
+          $("who").textContent = newName;
+        }catch(e){
+          setMsg($("uMsg"), "err", e.message);
+        }
+      };
+
+      $("reqTest").onclick = async () => {
+        setMsg($("testMsg"), "", "");
+        try{
+          const proof = $("testProof").value.trim();
+          const notes = $("testNotes").value.trim();
+
+          if (!isValidUrl(proof)) throw new Error("Proof URL is required and must start with http(s)://");
+
+          const { error } = await supabase.from("test_requests").insert({
+            candidate_id: session.user.id,
+            notes: notes || null,
+            proof_url: proof
+          });
+          if (error) throw error;
+
+          setMsg($("testMsg"), "ok", "Test requested.");
+          await refreshMyRequests(session.user.id);
+        }catch(e){
+          setMsg($("testMsg"), "err", e.message);
+        }
+      };
+
+      $("reqEval").onclick = async () => {
+        setMsg($("evalMsg"), "", "");
+        try{
+          const proof = $("evalProof").value.trim();
+          const notes = $("evalNotes").value.trim();
+
+          if (!isValidUrl(proof)) throw new Error("Proof URL is required and must start with http(s)://");
+
+          const { error } = await supabase.from("eval_requests").insert({
+            candidate_id: session.user.id,
+            notes: notes || null,
+            proof_url: proof
+          });
+          if (error) throw error;
+
+          setMsg($("evalMsg"), "ok", "Eval requested.");
+          await refreshMyRequests(session.user.id);
+        }catch(e){
+          setMsg($("evalMsg"), "err", e.message);
+        }
+      };
+
+      await refreshMyRequests(session.user.id);
+    }
+
+    await main();
+    supabase.auth.onAuthStateChange(() => main());
+  </script>
+</body>
+</html>
